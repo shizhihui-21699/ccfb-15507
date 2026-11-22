@@ -1,0 +1,83 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 通知：充电告警 + 前台服务常驻通知（Android 13+ 需运行时请求） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 前台服务：插入充电器时用户通常锁屏、不在 App 内，必须常驻后台才能及时检测 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- 开机后自动恢复守护 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+      USB 主机能力（手机作为主机，例如插入伪装成充电线的 USB 网卡/键盘）。
+      声明 uses-feature required=false，避免在不支持 OTG 的机型上无法安装。
+    -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+    <!--
+      注意：应用刻意**不**声明 android.permission.QUERY_ALL_PACKAGES。
+      若要启用"连接期间被安装应用"检测，需要用户在系统设置中另行授权，
+      应用会在能力页明确展示该权限是否已获得，而不是假设它存在。
+    -->
+
+    <application
+        android:label="充电守护"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- 常驻前台服务：监听 USB 状态 -->
+        <service
+            android:name=".GuardService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="public_charging_usb_guard" />
+        </service>
+
+        <!--
+          开机自启：重新拉起前台服务。
+          注：部分厂商（如小米/华为）会拦截开机自启，属系统限制，App 会在能力页说明。
+        -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>

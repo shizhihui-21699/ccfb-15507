@@ -1,3 +1,4 @@
+# 环境 / 密钥
 .env
 .env.*
 !.env.example
@@ -16,3 +17,18 @@ node_modules/
 __pycache__/
 .venv/
 venv/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.idea/
+*.iml
+.metadata
+
+# Android（本机 SDK 路径，不入库）
+android/local.properties
+android/.gradle/
+android/app/.cxx/
+android/.kotlin/
